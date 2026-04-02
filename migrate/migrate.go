@@ -584,17 +584,22 @@ func parseComparison(s string) (ir.ConditionExpr, error) {
 		}
 	}
 
-	// Try single-char operators: =, <, >.
-	for _, op := range []string{"=", "<", ">"} {
-		if idx := strings.Index(s, op); idx > 0 {
-			return buildCompare(s, idx, 1, op), nil
-		}
+	// Try = (equality) before word operators since = won't appear in word-op values.
+	if idx := strings.Index(s, "="); idx > 0 {
+		return buildCompare(s, idx, 1, "="), nil
 	}
 
-	// Try word-based operators: contains, startswith, endswith, in.
+	// Try word-based operators before <, > since values may contain angle brackets.
 	for _, op := range []string{" contains ", " startswith ", " endswith ", " in "} {
 		if idx := strings.Index(s, op); idx > 0 {
 			return buildCompare(s, idx, len(op), strings.TrimSpace(op)), nil
+		}
+	}
+
+	// Try single-char < and > last.
+	for _, op := range []string{"<", ">"} {
+		if idx := strings.Index(s, op); idx > 0 {
+			return buildCompare(s, idx, 1, op), nil
 		}
 	}
 

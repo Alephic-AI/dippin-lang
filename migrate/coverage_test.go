@@ -254,6 +254,20 @@ func TestParseComparison_GreaterThanOrEqual(t *testing.T) {
 	}
 }
 
+func TestParseComparison_ContainsWithAngleBracket(t *testing.T) {
+	expr, err := parseComparison("tool_stdout contains x<y")
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	cmp := expr.(ir.CondCompare)
+	if cmp.Op != "contains" {
+		t.Errorf("Op = %q, want contains", cmp.Op)
+	}
+	if cmp.Value != "x<y" {
+		t.Errorf("Value = %q, want x<y", cmp.Value)
+	}
+}
+
 func TestParseComparison_Unparseable(t *testing.T) {
 	_, err := parseComparison("just_a_word")
 	if err == nil {
