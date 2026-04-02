@@ -427,6 +427,10 @@ func (p *parser) parseDefaultsStatement(keyword string) error {
 }
 
 // parseEdgeStatement handles edge statements including chained edges (A -> B -> C).
+// Note: in standard Graphviz, trailing attrs on a chain (A -> B -> C [k=v]) apply to
+// ALL edges. Here, attrs only attach to the segment they follow. In practice this is
+// fine — chained edges are used for unconditional sequential flows, while edges with
+// conditions or labels are written as separate statements.
 func (p *parser) parseEdgeStatement(fromNode string) error {
 	from := fromNode
 	for {
