@@ -1,6 +1,7 @@
 package simulate
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/2389-research/dippin-lang/ir"
@@ -67,9 +68,26 @@ var operatorFuncs = map[string]func(ctxVal, value string) bool{
 	"=":          func(a, b string) bool { return a == b },
 	"==":         func(a, b string) bool { return a == b },
 	"!=":         func(a, b string) bool { return a != b },
+	"<":          compareNumeric(func(a, b int) bool { return a < b }),
+	">":          compareNumeric(func(a, b int) bool { return a > b }),
+	"<=":         compareNumeric(func(a, b int) bool { return a <= b }),
+	">=":         compareNumeric(func(a, b int) bool { return a >= b }),
 	"contains":   func(a, b string) bool { return strings.Contains(a, b) },
 	"startswith": func(a, b string) bool { return strings.HasPrefix(a, b) },
 	"endswith":   func(a, b string) bool { return strings.HasSuffix(a, b) },
+}
+
+// compareNumeric returns an operator func that parses both sides as integers.
+// Returns false if either side is not a valid integer.
+func compareNumeric(cmp func(a, b int) bool) func(string, string) bool {
+	return func(ctxVal, value string) bool {
+		a, errA := strconv.Atoi(ctxVal)
+		b, errB := strconv.Atoi(value)
+		if errA != nil || errB != nil {
+			return false
+		}
+		return cmp(a, b)
+	}
 }
 
 func (s *simulator) evalCondition(expr ir.ConditionExpr) bool {

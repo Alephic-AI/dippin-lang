@@ -70,6 +70,55 @@ func TestEvalCompare_InOperatorNoMatch(t *testing.T) {
 	}
 }
 
+// --- evalCompare: numeric operators ---
+
+func TestEvalCompare_LessThan(t *testing.T) {
+	s := &simulator{ctx: map[string]string{"retries": "2"}}
+	if !s.evalCompare(ir.CondCompare{Variable: "retries", Op: "<", Value: "4"}) {
+		t.Error("expected 2 < 4 to be true")
+	}
+	if s.evalCompare(ir.CondCompare{Variable: "retries", Op: "<", Value: "2"}) {
+		t.Error("expected 2 < 2 to be false")
+	}
+}
+
+func TestEvalCompare_GreaterThanOrEqual(t *testing.T) {
+	s := &simulator{ctx: map[string]string{"retries": "4"}}
+	if !s.evalCompare(ir.CondCompare{Variable: "retries", Op: ">=", Value: "4"}) {
+		t.Error("expected 4 >= 4 to be true")
+	}
+	if s.evalCompare(ir.CondCompare{Variable: "retries", Op: ">=", Value: "5"}) {
+		t.Error("expected 4 >= 5 to be false")
+	}
+}
+
+func TestEvalCompare_GreaterThan(t *testing.T) {
+	s := &simulator{ctx: map[string]string{"retries": "5"}}
+	if !s.evalCompare(ir.CondCompare{Variable: "retries", Op: ">", Value: "4"}) {
+		t.Error("expected 5 > 4 to be true")
+	}
+	if s.evalCompare(ir.CondCompare{Variable: "retries", Op: ">", Value: "5"}) {
+		t.Error("expected 5 > 5 to be false")
+	}
+}
+
+func TestEvalCompare_LessThanOrEqual(t *testing.T) {
+	s := &simulator{ctx: map[string]string{"retries": "3"}}
+	if !s.evalCompare(ir.CondCompare{Variable: "retries", Op: "<=", Value: "3"}) {
+		t.Error("expected 3 <= 3 to be true")
+	}
+	if s.evalCompare(ir.CondCompare{Variable: "retries", Op: "<=", Value: "2"}) {
+		t.Error("expected 3 <= 2 to be false")
+	}
+}
+
+func TestEvalCompare_NumericNonNumericReturnsFalse(t *testing.T) {
+	s := &simulator{ctx: map[string]string{"retries": "abc"}}
+	if s.evalCompare(ir.CondCompare{Variable: "retries", Op: "<", Value: "4"}) {
+		t.Error("expected false when context value is not numeric")
+	}
+}
+
 // --- resolveVariable: unknown namespace ---
 
 func TestResolveVariable_UnknownNamespace(t *testing.T) {
@@ -364,6 +413,22 @@ func TestSeedCompareContext_BareVar(t *testing.T) {
 	seedCompareContext(ir.CondCompare{Variable: "outcome", Op: "=", Value: "done"}, ctx)
 	if ctx["outcome"] != "done" {
 		t.Errorf("ctx[outcome] = %q, want 'done'", ctx["outcome"])
+	}
+}
+
+func TestSeedCompareContext_LessThan(t *testing.T) {
+	ctx := make(map[string]string)
+	seedCompareContext(ir.CondCompare{Variable: "ctx.retries", Op: "<", Value: "4"}, ctx)
+	if ctx["retries"] != "3" {
+		t.Errorf("ctx[retries] = %q, want '3'", ctx["retries"])
+	}
+}
+
+func TestSeedCompareContext_GreaterThanOrEqual(t *testing.T) {
+	ctx := make(map[string]string)
+	seedCompareContext(ir.CondCompare{Variable: "ctx.retries", Op: ">=", Value: "4"}, ctx)
+	if ctx["retries"] != "4" {
+		t.Errorf("ctx[retries] = %q, want '4'", ctx["retries"])
 	}
 }
 

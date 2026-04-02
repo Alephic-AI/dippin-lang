@@ -268,6 +268,28 @@ func TestParseComparison_ContainsWithAngleBracket(t *testing.T) {
 	}
 }
 
+func TestParseComparison_GreaterThan(t *testing.T) {
+	expr, err := parseComparison("retries>3")
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	cmp := expr.(ir.CondCompare)
+	if cmp.Op != ">" {
+		t.Errorf("Op = %q, want >", cmp.Op)
+	}
+}
+
+func TestParseComparison_LessThanOrEqual(t *testing.T) {
+	expr, err := parseComparison("retries<=10")
+	if err != nil {
+		t.Fatalf("error: %v", err)
+	}
+	cmp := expr.(ir.CondCompare)
+	if cmp.Op != "<=" {
+		t.Errorf("Op = %q, want <=", cmp.Op)
+	}
+}
+
 func TestParseComparison_Unparseable(t *testing.T) {
 	_, err := parseComparison("just_a_word")
 	if err == nil {
