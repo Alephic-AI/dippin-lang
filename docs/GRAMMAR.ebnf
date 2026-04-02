@@ -194,8 +194,10 @@ unary_expr      = "not" unary_expr
 (* produce CondNot{Inner: CondCompare{...}} in the AST.              *)
 compare_expr    = operand [ "not" ] compare_op operand ;
 
-(* All operators perform string comparison — no numeric coercion.    *)
+(* String operators perform string comparison; <, >, <=, >= parse   *)
+(* both sides as integers and return false if either is non-numeric. *)
 compare_op      = "==" | "!=" | "="
+                | "<" | ">" | "<=" | ">="
                 | "contains" | "startswith" | "endswith" | "in" ;
 
 operand         = variable | STRING | IDENTIFIER ;
