@@ -277,20 +277,26 @@ func seedCompareContext(e ir.CondCompare, ctx map[string]string) {
 		if len(parts) > 0 {
 			ctx[key] = strings.TrimSpace(parts[0])
 		}
-	case "<", "<=":
-		// Seed a value that satisfies the condition (one less than threshold).
-		seedNumericBelow(key, e.Value, ctx)
-	case ">", ">=":
-		// Seed a value that satisfies the condition (the threshold itself).
+	case "<":
+		// Seed n-1 so n-1 < n is true.
+		seedNumericOffset(key, e.Value, -1, ctx)
+	case "<=":
+		// Seed n so n <= n is true.
+		ctx[key] = e.Value
+	case ">":
+		// Seed n+1 so n+1 > n is true.
+		seedNumericOffset(key, e.Value, 1, ctx)
+	case ">=":
+		// Seed n so n >= n is true.
 		ctx[key] = e.Value
 	}
 }
 
-// seedNumericBelow seeds a numeric value one less than the threshold.
+// seedNumericOffset seeds a numeric value offset from the threshold.
 // Falls back to "0" if the threshold is not a valid integer.
-func seedNumericBelow(key, value string, ctx map[string]string) {
+func seedNumericOffset(key, value string, offset int, ctx map[string]string) {
 	if n, err := strconv.Atoi(value); err == nil {
-		ctx[key] = strconv.Itoa(n - 1)
+		ctx[key] = strconv.Itoa(n + offset)
 	} else {
 		ctx[key] = "0"
 	}

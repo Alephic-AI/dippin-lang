@@ -432,6 +432,22 @@ func TestSeedCompareContext_GreaterThanOrEqual(t *testing.T) {
 	}
 }
 
+func TestSeedCompareContext_GreaterThan(t *testing.T) {
+	ctx := make(map[string]string)
+	seedCompareContext(ir.CondCompare{Variable: "ctx.retries", Op: ">", Value: "4"}, ctx)
+	if ctx["retries"] != "5" {
+		t.Errorf("ctx[retries] = %q, want '5'", ctx["retries"])
+	}
+}
+
+func TestSeedCompareContext_LessThanOrEqual(t *testing.T) {
+	ctx := make(map[string]string)
+	seedCompareContext(ir.CondCompare{Variable: "ctx.retries", Op: "<=", Value: "4"}, ctx)
+	if ctx["retries"] != "4" {
+		t.Errorf("ctx[retries] = %q, want '4'", ctx["retries"])
+	}
+}
+
 // --- appendNodeEvents ---
 
 func TestAppendNodeEvents_ParallelNode(t *testing.T) {
