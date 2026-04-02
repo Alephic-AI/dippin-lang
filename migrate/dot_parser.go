@@ -426,25 +426,33 @@ func (p *parser) parseDefaultsStatement(keyword string) error {
 	return nil
 }
 
-// parseEdgeStatement handles ID -> ID [ ... ] edge statements.
+// parseEdgeStatement handles edge statements including chained edges (A -> B -> C).
 func (p *parser) parseEdgeStatement(fromNode string) error {
-	p.advance() // consume arrow
+	from := fromNode
+	for {
+		p.advance() // consume arrow
 
-	to, err := p.readIDOrString()
-	if err != nil {
-		return err
+		to, err := p.readIDOrString()
+		if err != nil {
+			return err
+		}
+
+		attrs, err := p.parseOptionalAttrs()
+		if err != nil {
+			return err
+		}
+
+		merged := mergeAttrs(p.graph.EdgeAttrs, attrs)
+		p.graph.Edges = append(p.graph.Edges, dotEdge{From: from, To: to, Attrs: merged})
+
+		p.ensureNode(from)
+		p.ensureNode(to)
+
+		if p.cur.kind != tokArrow {
+			break
+		}
+		from = to
 	}
-
-	attrs, err := p.parseOptionalAttrs()
-	if err != nil {
-		return err
-	}
-
-	merged := mergeAttrs(p.graph.EdgeAttrs, attrs)
-	p.graph.Edges = append(p.graph.Edges, dotEdge{From: fromNode, To: to, Attrs: merged})
-
-	p.ensureNode(fromNode)
-	p.ensureNode(to)
 	p.consumeOptionalSemicolon()
 	return nil
 }
