@@ -2,6 +2,7 @@ package simulate
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/2389-research/dippin-lang/event"
@@ -276,5 +277,27 @@ func seedCompareContext(e ir.CondCompare, ctx map[string]string) {
 		if len(parts) > 0 {
 			ctx[key] = strings.TrimSpace(parts[0])
 		}
+	case "<":
+		// Seed n-1 so n-1 < n is true.
+		seedNumericOffset(key, e.Value, -1, ctx)
+	case "<=":
+		// Seed n so n <= n is true.
+		ctx[key] = e.Value
+	case ">":
+		// Seed n+1 so n+1 > n is true.
+		seedNumericOffset(key, e.Value, 1, ctx)
+	case ">=":
+		// Seed n so n >= n is true.
+		ctx[key] = e.Value
+	}
+}
+
+// seedNumericOffset seeds a numeric value offset from the threshold.
+// Falls back to "0" if the threshold is not a valid integer.
+func seedNumericOffset(key, value string, offset int, ctx map[string]string) {
+	if n, err := strconv.Atoi(value); err == nil {
+		ctx[key] = strconv.Itoa(n + offset)
+	} else {
+		ctx[key] = "0"
 	}
 }

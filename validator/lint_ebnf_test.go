@@ -20,7 +20,7 @@ func TestEBNFOperatorsMatchParser(t *testing.T) {
 
 	// Operators the parser accepts (from simulate.ParseCondition).
 	// Test each by parsing a condition that uses it.
-	parserOps := []string{"=", "==", "!=", "contains", "startswith", "endswith", "in"}
+	parserOps := []string{"=", "==", "!=", "<", ">", "<=", ">=", "contains", "startswith", "endswith", "in"}
 	for _, op := range parserOps {
 		raw := "ctx.x " + op + " val"
 		if _, err := simulate.ParseCondition(raw); err != nil {
@@ -33,7 +33,7 @@ func TestEBNFOperatorsMatchParser(t *testing.T) {
 	}
 
 	// Operators that should NOT be accepted.
-	rejectedOps := []string{"<", ">", "<=", ">=", "like", "matches"}
+	rejectedOps := []string{"like", "matches"}
 	for _, op := range rejectedOps {
 		raw := "ctx.x " + op + " val"
 		if _, err := simulate.ParseCondition(raw); err == nil {

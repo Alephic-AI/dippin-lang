@@ -577,20 +577,29 @@ func trySplitAt(s string, i, opLen int) ([]string, bool) {
 func parseComparison(s string) (ir.ConditionExpr, error) {
 	s = strings.TrimSpace(s)
 
-	// Try != first (before =) to avoid matching the = in !=.
-	if idx := strings.Index(s, "!="); idx > 0 {
-		return buildCompare(s, idx, 2, "!="), nil
+	// Try multi-char operators first to avoid partial matches.
+	for _, op := range []string{"!=", ">=", "<="} {
+		if idx := strings.Index(s, op); idx > 0 {
+			return buildCompare(s, idx, 2, op), nil
+		}
 	}
 
-	// Try = (equality).
+	// Try = (equality) before word operators since = won't appear in word-op values.
 	if idx := strings.Index(s, "="); idx > 0 {
 		return buildCompare(s, idx, 1, "="), nil
 	}
 
-	// Try word-based operators: contains, startswith, endswith, in.
+	// Try word-based operators before <, > since values may contain angle brackets.
 	for _, op := range []string{" contains ", " startswith ", " endswith ", " in "} {
 		if idx := strings.Index(s, op); idx > 0 {
 			return buildCompare(s, idx, len(op), strings.TrimSpace(op)), nil
+		}
+	}
+
+	// Try single-char < and > last.
+	for _, op := range []string{"<", ">"} {
+		if idx := strings.Index(s, op); idx > 0 {
+			return buildCompare(s, idx, 1, op), nil
 		}
 	}
 

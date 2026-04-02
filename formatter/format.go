@@ -180,8 +180,53 @@ func writeNode(wr *writer, n *ir.Node) {
 	}
 	wr.line("%s %s", n.Kind, n.ID)
 	wr.push()
-	writeNodeConfigFields(wr, n)
+	if nodeHasFields(n) {
+		writeNodeConfigFields(wr, n)
+	} else {
+		wr.line("label: %s", quoteValue(n.ID))
+	}
 	wr.pop()
+}
+
+// nodeHasFields returns true if the node has any fields worth emitting.
+func nodeHasFields(n *ir.Node) bool {
+	if n.Label != "" || len(n.Classes) > 0 {
+		return true
+	}
+	if len(n.IO.Reads) > 0 || len(n.IO.Writes) > 0 {
+		return true
+	}
+	if n.Retry != (ir.RetryConfig{}) {
+		return true
+	}
+	return nodeConfigHasFields(n.Config)
+}
+
+// nodeConfigHasFields checks if the node's config has any non-zero fields.
+func nodeConfigHasFields(cfg ir.NodeConfig) bool {
+	switch c := cfg.(type) {
+	case ir.AgentConfig:
+		return agentConfigHasFields(c)
+	case ir.HumanConfig:
+		return c != ir.HumanConfig{}
+	case ir.ToolConfig:
+		return c.Command != "" || c.Timeout != 0 || len(c.Outputs) > 0
+	case ir.SubgraphConfig:
+		return c.Ref != "" || len(c.Params) > 0
+	}
+	return false
+}
+
+// agentConfigHasFields returns true if any agent config field is set.
+func agentConfigHasFields(c ir.AgentConfig) bool {
+	return c.Prompt != "" || c.SystemPrompt != "" ||
+		c.Model != "" || c.Provider != "" ||
+		c.Fidelity != "" || c.ReasoningEffort != "" ||
+		c.GoalGate || c.AutoStatus || c.CacheTools ||
+		c.MaxTurns != 0 || c.CmdTimeout != 0 ||
+		c.Compaction != "" || c.CompactionThreshold != 0 ||
+		c.ResponseFormat != "" || c.ResponseSchema != "" ||
+		len(c.Params) > 0
 }
 
 // writeStructuralNode writes parallel/fan_in nodes. Returns true if handled.

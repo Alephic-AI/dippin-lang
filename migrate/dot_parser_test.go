@@ -180,6 +180,46 @@ func TestDOTParseComments(t *testing.T) {
 	}
 }
 
+func TestDOTParseChainedEdges(t *testing.T) {
+	input := `digraph test {
+		A -> B -> C -> D;
+	}`
+	g, err := parseDOT(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Edges) != 3 {
+		t.Fatalf("edges = %d, want 3", len(g.Edges))
+	}
+	want := [][2]string{{"A", "B"}, {"B", "C"}, {"C", "D"}}
+	for i, w := range want {
+		if g.Edges[i].From != w[0] || g.Edges[i].To != w[1] {
+			t.Errorf("edge[%d] = %s->%s, want %s->%s",
+				i, g.Edges[i].From, g.Edges[i].To, w[0], w[1])
+		}
+	}
+}
+
+func TestDOTParseChainedEdgesTrailingAttrs(t *testing.T) {
+	input := `digraph test {
+		A -> B -> C [label="end"];
+	}`
+	g, err := parseDOT(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Edges) != 2 {
+		t.Fatalf("edges = %d, want 2", len(g.Edges))
+	}
+	// Attrs only attach to the segment they follow (B->C), not A->B.
+	if g.Edges[0].Attrs["label"] != "" {
+		t.Errorf("edge[0] label = %q, want empty", g.Edges[0].Attrs["label"])
+	}
+	if g.Edges[1].Attrs["label"] != "end" {
+		t.Errorf("edge[1] label = %q, want 'end'", g.Edges[1].Attrs["label"])
+	}
+}
+
 func TestDOTNormalizeWhitespace(t *testing.T) {
 	tests := []struct {
 		input string
